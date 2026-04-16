@@ -1,0 +1,47 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: k8s-retro
+  namespace: vks-clusters-ns
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+        - 192.168.156.0/20
+    services:
+      cidrBlocks:
+        - 10.96.0.0/12
+    serviceDomain: cluster.local
+  topology:
+    class: builtin-generic-v3.4.0
+    classNamespace: vmware-system-vks-public
+    version: v1.29.4---vmware.3-fips.1-tkg.1
+    variables:
+      - name: vsphereOptions
+        value:
+          persistentVolumes:
+            availableStorageClasses:
+              - vks-vsan-sp-01
+            defaultStorageClass: vks-vsan-sp-01
+      - name: kubernetes
+        value:
+          certificateRotation:
+            enabled: true
+            renewalDaysBeforeExpiry: 90
+      - name: vmClass
+        value: best-effort-small
+      - name: storageClass
+        value: vks-vsan-sp-01
+    controlPlane:
+      replicas: 1
+      metadata:
+        annotations:
+          run.tanzu.vmware.com/resolve-os-image: os-name=photon, content-library=cl-b01fcfdbca001a90b
+    workers:
+      machineDeployments:
+        - class: node-pool
+          name: k8s-retro-np
+          replicas: 1
+          metadata:
+            annotations:
+              run.tanzu.vmware.com/resolve-os-image: os-name=photon, content-library=cl-b01fcfdbca001a90b
